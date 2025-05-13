@@ -5,14 +5,10 @@ import User from "@/models/user";
 // Create a client to send and receive events
 export const inngest = new Inngest({ id: "stella" });
 
-// Validate and create a new user in the database
+// User Created Function
 export const syncuserCreation = inngest.createFunction(
-  {
-    id: "sync-user-from-clerk",
-  },
-  {
-    event: "clerk/user.created",
-  },
+  { id: "sync-user-from-clerk" },
+  { event: "clerk/user.created" },
   async ({ event }) => {
     try {
       // Validate event data structure
@@ -39,14 +35,10 @@ export const syncuserCreation = inngest.createFunction(
   }
 );
 
-// Validate and update an existing user in the database
+// User Updated Function
 export const syncUserUpdation = inngest.createFunction(
-  {
-    id: "update-user-from-clerk",
-  },
-  {
-    event: "clerk/user.updated",
-  },
+  { id: "update-user-from-clerk" },
+  { event: "clerk/user.updated" },
   async ({ event }) => {
     try {
       // Validate event data structure
@@ -73,14 +65,10 @@ export const syncUserUpdation = inngest.createFunction(
   }
 );
 
-// Validate and delete a user from the database
+// User Deleted Function
 export const syncUserDeletion = inngest.createFunction(
-  {
-    id: "delete-user-with-clerk",
-  },
-  {
-    event: "clerk/user.deleted",
-  },
+  { id: "delete-user-with-clerk" },
+  { event: "clerk/user.deleted" },
   async ({ event }) => {
     try {
       // Validate event data structure

@@ -1,7 +1,8 @@
 {
   "compilerOptions": {
+    "baseUrl": ".",        // This tells the compiler to start resolving paths from the root of the project
     "paths": {
-      "@/*": ["./*"]
+      "@/*": ["./*"]      // This maps @ to the root directory
     }
   }
 }

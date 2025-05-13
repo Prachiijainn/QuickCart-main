@@ -1,12 +1,17 @@
 import { serve } from "inngest/next";
-import { inngest, syncuserCreation, syncUserUpdation, syncUserDeletion } from "@/config/inngest"; // Ensure this is correct
+import {
+  inngest,
+  syncuserCreation,
+  syncUserUpdation,
+  syncUserDeletion,
+} from "@/config/inngest";
 
-// Create an API that serves the Inngest functions
+// Serve the API route for Inngest
 export const { GET, POST, PUT } = serve({
   client: inngest,
   functions: [
-    syncuserCreation,    // Sync user creation function
-    syncUserUpdation,    // Sync user updation function
-    syncUserDeletion,    // Sync user deletion function
+    syncuserCreation,
+    syncUserUpdation,
+    syncUserDeletion,
   ],
 });

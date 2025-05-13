@@ -1,93 +1,101 @@
-const { Inngest } = require("inngest");
-const connectDB = require("./db");
-const User = require("@/models/user");
+import { Inngest } from "inngest";
+import connectDB from "./db";
+import User from "@/models/user";
 
-// Initialize Inngest client
-const inngest = new Inngest({ id: "stella" });
+// Create a client to send and receive events
+export const inngest = new Inngest({ id: "stella" });
 
-// User Created Function
-const syncuserCreation = inngest.createFunction(
-  { id: "sync-user-from-clerk" },
-  { event: "clerk/user.created" },
+// Validate and create a new user in the database
+export const syncuserCreation = inngest.createFunction(
+  {
+    id: "sync-user-from-clerk",
+  },
+  {
+    event: "clerk/user.created",
+  },
   async ({ event }) => {
     try {
-      const { id, first_name, last_name, email_addresses, image_url } = event.data;
-
-      if (!id || !email_addresses || !email_addresses.length) {
+      // Validate event data structure
+      if (!event.data || !event.data.id || !event.data.email_addresses) {
         throw new Error("Invalid event data");
       }
+
+      const { id, first_name, last_name, email_addresses, image_url } = event.data;
 
       const userData = {
         _id: id,
         email: email_addresses[0].email_address,
         name: `${first_name} ${last_name}`,
-        imageUrl: image_url || "",
+        imageUrl: image_url || "", // Handle possible null/undefined image_url
       };
 
       await connectDB();
       await User.create(userData);
-      console.log("✅ User created successfully");
-    } catch (err) {
-      console.error("❌ Error in user creation:", err);
-      throw err;
+      console.log("User created successfully");
+    } catch (error) {
+      console.error("Error creating user:", error);
+      throw error; // Optionally rethrow if needed
     }
   }
 );
 
-// User Updated Function
-const syncUserUpdation = inngest.createFunction(
-  { id: "update-user-from-clerk" },
-  { event: "clerk/user.updated" },
+// Validate and update an existing user in the database
+export const syncUserUpdation = inngest.createFunction(
+  {
+    id: "update-user-from-clerk",
+  },
+  {
+    event: "clerk/user.updated",
+  },
   async ({ event }) => {
     try {
-      const { id, first_name, last_name, email_addresses, image_url } = event.data;
-
-      if (!id || !email_addresses || !email_addresses.length) {
+      // Validate event data structure
+      if (!event.data || !event.data.id || !event.data.email_addresses) {
         throw new Error("Invalid event data");
       }
+
+      const { id, first_name, last_name, email_addresses, image_url } = event.data;
 
       const userData = {
         _id: id,
         email: email_addresses[0].email_address,
         name: `${first_name} ${last_name}`,
-        imageUrl: image_url || "",
+        imageUrl: image_url || "", // Handle possible null/undefined image_url
       };
 
       await connectDB();
       await User.findByIdAndUpdate(id, userData);
-      console.log("✅ User updated successfully");
-    } catch (err) {
-      console.error("❌ Error in user update:", err);
-      throw err;
+      console.log("User updated successfully");
+    } catch (error) {
+      console.error("Error updating user:", error);
+      throw error; // Optionally rethrow if needed
     }
   }
 );
 
-// User Deleted Function
-const syncUserDeletion = inngest.createFunction(
-  { id: "delete-user-with-clerk" },
-  { event: "clerk/user.deleted" },
+// Validate and delete a user from the database
+export const syncUserDeletion = inngest.createFunction(
+  {
+    id: "delete-user-with-clerk",
+  },
+  {
+    event: "clerk/user.deleted",
+  },
   async ({ event }) => {
     try {
-      const { id } = event.data;
-
-      if (!id) {
+      // Validate event data structure
+      if (!event.data || !event.data.id) {
         throw new Error("Invalid event data");
       }
 
+      const { id } = event.data;
+
       await connectDB();
       await User.findByIdAndDelete(id);
-      console.log("✅ User deleted successfully");
-    } catch (err) {
-      console.error("❌ Error in user deletion:", err);
-      throw err;
+      console.log("User deleted successfully");
+    } catch (error) {
+      console.error("Error deleting user:", error);
+      throw error; // Optionally rethrow if needed
     }
   }
 );
-
-module.exports = {
-  inngest,
-  syncuserCreation,
-  syncUserUpdation,
-  syncUserDeletion,
-};

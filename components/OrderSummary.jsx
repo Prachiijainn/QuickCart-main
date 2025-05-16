@@ -76,7 +76,8 @@ const OrderSummary = () => {
       });
 
       if (data.success) {
-        toast.success("Order placed successfully!");
+        // Remove success toast as there's already a success page
+        // toast.success("Order placed successfully!");
         // Redirect to order confirmation page
         router.push('/order-placed');
       } else {

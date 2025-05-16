@@ -104,11 +104,12 @@ export const AppContextProvider = (props) => {
         try {
             const token = await getToken();
             console.log("Token being sent:", token);
-            await axios.put('/api/user/cart', { cartItems: updatedCartItems }, {
+            await axios.post('/api/cart/update', {cartData: updatedCartItems}, {
                 headers: { Authorization: `Bearer ${token}` },
             });
             // Optionally provide more granular success messages if needed
         } catch (error) {
+            console.error("Error updating cart on server:", error);
             toast.error('Failed to sync cart with server.');
             // Consider more sophisticated error handling, e.g., retries or local storage backup
         }
@@ -125,21 +126,15 @@ export const AppContextProvider = (props) => {
             const updatedCart = { ...cartItems };
             updatedCart[itemId] = (updatedCart[itemId] || 0) + 1;
             setCartItems(updatedCart);
-            updateCartOnServer(updatedCart); // Update immediately
-             if (user) {
-                try {
-                    const token = await getToken();
-
-                    await axios.post('/api/cart/update', {cartData: updatedCart}, {headers : {Authorization:`Bearer ${token}` }});
-                    toast.success('Item added to cart!');
-
-                } catch (error) {
-                    toast.error(error.message);
-                }
-                
-             }
+            
+            try {
+                await updateCartOnServer(updatedCart);
+                toast.success('Item added to cart!');
+            } catch (error) {
+                toast.error(error.message);
+            }
         },
-        [cartItems, updateCartOnServer, user, getToken]
+        [cartItems, updateCartOnServer, user]
     );
 
     const updateCartQuantity = useCallback(
@@ -156,17 +151,17 @@ export const AppContextProvider = (props) => {
             } else {
                 updatedCart[itemId] = quantity;
             }
+            
             setCartItems(updatedCart);
-            updateCartOnServer(updatedCart); // Update immediately
-            toast.success('Cart updated!');
+            
             try {
-                const token = await getToken();
-                await axios.post('/api/cart/update', {cartData: updatedCart}, {headers: {Authorization: `Bearer ${token}`}});
+                await updateCartOnServer(updatedCart);
+                toast.success('Cart updated!');
             } catch (error) {
                 toast.error(error.message);
             }
         },
-        [cartItems, updateCartOnServer, user, getToken]
+        [cartItems, updateCartOnServer, user]
     );
 
     const getCartCount = useCallback(() => {
@@ -210,7 +205,7 @@ export const AppContextProvider = (props) => {
         } finally {
             setAddressesLoading(false);
         }
-    }, [user, getToken]);
+    }, [user, getToken, selectedAddress]);
 
     useEffect(() => {
         fetchProductData();

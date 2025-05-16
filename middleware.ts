@@ -9,6 +9,8 @@ const cartRoutes = createRouteMatcher(["/cart(.*)"]);
 const checkoutRoutes = createRouteMatcher(["/checkout(.*)"]);
 const myOrdersRoutes = createRouteMatcher(["/my-orders(.*)"]);
 const setSellerRoleRoute = createRouteMatcher(["/set-seller-role(.*)"]);
+const cartApiRoutes = createRouteMatcher(["/api/cart/(.*)", "/api/user/cart(.*)"]);
+const ordersApiRoutes = createRouteMatcher(["/api/orders/(.*)", "/api/order/(.*)"]);
 // const invoiceRoutes = createRouteMatcher(["/dashboard/invoices(.*)"]);
 // const salaryRoutes = createRouteMatcher(["/dashboard/salary(.*)"]);
 // const settingsRoutes = createRouteMatcher(["/dashboard/settings(.*)"]);
@@ -55,7 +57,7 @@ export default clerkMiddleware(async (auth, req: NextRequest) => {
   }
 
   // Regular authentication for other protected routes
-  if(cartRoutes(req) || myOrdersRoutes(req) || checkoutRoutes(req)) {
+  if(cartRoutes(req) || myOrdersRoutes(req) || checkoutRoutes(req) || cartApiRoutes(req) || ordersApiRoutes(req)) {
     if (!userId) {
       auth.protect();
       return;

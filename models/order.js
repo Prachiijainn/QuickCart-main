@@ -1,6 +1,16 @@
 import mongoose from "mongoose";
-import Address from "./address";
 
+const orderItemSchema = new mongoose.Schema({
+    quantity: {
+        type: Number,
+        required: true,
+    },
+    product: {
+        type: mongoose.Schema.Types.ObjectId,
+        ref: "product",
+        required: true,
+    }
+});
 
 const orderSchema = new mongoose.Schema({
     userId: {
@@ -8,30 +18,19 @@ const orderSchema = new mongoose.Schema({
         required: true,
         ref: "user",
     },
-    items: [
-        {
-            type: mongoose.Schema.Types.ObjectId,
-            ref: "product", required: true,
-        
-        quantity: {
-            type: Number,
-            required: true,
-        },
-        product: {
-            type: mongoose.Schema.Types.ObjectId,
-            ref: "product",
-            required: true,
-        },
-    }
-    ],
+    items: [orderItemSchema],
     amount: {
         type: Number,
         required: true,
     },
     address: {
-        type: mongoose.Schema.Types.ObjectId,
-        ref: "address",
-        required: true,
+        fullName: String,
+        phoneNumber: String,
+        pincode: String,
+        area: String,
+        city: String,
+        state: String,
+        userId: String
     },
     status: {
         type: String,

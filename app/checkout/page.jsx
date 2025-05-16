@@ -68,8 +68,8 @@ const Checkout = () => {
     try {
       const token = await getToken();
       // Here you would make an API call to place the order
-      // For now, just show a success message
-      toast.success('Order placed successfully!');
+      // Remove success toast - we'll show the success page instead
+      // toast.success('Order placed successfully!');
       // Redirect to orders page
       router.push('/my-orders');
     } catch (error) {

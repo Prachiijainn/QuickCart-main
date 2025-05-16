@@ -44,7 +44,14 @@ const Navbar = () => {
       </div>
 
       <ul className="hidden md:flex items-center gap-4 ">
-        <Image className="w-4 h-4" src={assets.search_icon} alt="search icon" />
+       
+      <div>
+  <Link href="/cart" className="flex items-center gap-1 hover:text-gray-900 transition">
+    <CartIcon className="w-5 h-5" />
+    
+  </Link>
+</div>
+
         {
           user
             ? <>

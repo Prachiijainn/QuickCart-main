@@ -7,7 +7,10 @@
     "build": "next build",
     "start": "next start",
     "lint": "next lint",
-    "inngest:dev": "npx inngest-cli@latest dev"
+    "inngest:dev": "npx inngest-cli@latest serve --no-discovery",
+    "test:inngest": "node scripts/test-inngest.js",
+    "test:order-event": "node scripts/test-order-event.js",
+    "send:test-order": "node scripts/send-test-order.js"
   },
   "dependencies": {
     "@clerk/nextjs": "^6.19.4",
@@ -20,6 +23,7 @@
     "react": "^19.0.0",
     "react-dom": "^19.0.0",
     "react-hot-toast": "^2.5.1",
+    "react-toastify": "^11.0.5",
     "token": "^0.1.0"
   },
   "devDependencies": {

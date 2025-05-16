@@ -5,11 +5,12 @@ import Footer from "../../components/Footer";
 import Image from "next/image";
 import { useState } from "react";
 import { useAppContext } from "@/context/AppContext";
-import { headers } from "next/headers";
+import axios from "axios";
+import toast from "react-hot-toast";
 
 const AddAddress = () => {
 
-    const {getToken,router} = useAppContext
+    const { getToken, router } = useAppContext();
 
     const [address, setAddress] = useState({
         fullName: '',
@@ -23,22 +24,19 @@ const AddAddress = () => {
     const onSubmitHandler = async (e) => {
         e.preventDefault();
         try {
-            const token=await getToken()
-            const{data}= await axios.post('/api/user/get-address',{address},{headers: {Authorization : `Bearer ${token}`}})
-
+            const token = await getToken();
+            const { data } = await axios.post('/api/user/address', { address }, { headers: { Authorization: `Bearer ${token}` } });
 
             if (data.success) {
-                toast.success(data.message)
-                router.push('/cart')
-                
+                toast.success(data.message);
+                router.push('/cart');
             }
-            else{
-                toast.error(data.message)
+            else {
+                toast.error(data.message);
             }
         } catch (error) {
-            toast.error(error.message)
+            toast.error(error.message);
         }
-
     }
 
     return (

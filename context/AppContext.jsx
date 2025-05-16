@@ -24,6 +24,11 @@ export const AppContextProvider = (props) => {
     const [isSeller, setIsSeller] = useState(false);
     const [cartItems, setCartItems] = useState({});
     const [loadingUser, setLoadingUser] = useState(true); // Track user data loading
+    
+    // Add these new state variables
+    const [userAddresses, setUserAddresses] = useState([]);
+    const [selectedAddress, setSelectedAddress] = useState(null);
+    const [addressesLoading, setAddressesLoading] = useState(false);
 
     const fetchProductData = useCallback(async () => {
         try {
@@ -123,18 +128,18 @@ export const AppContextProvider = (props) => {
             updateCartOnServer(updatedCart); // Update immediately
              if (user) {
                 try {
-                    const token = await getToken
+                    const token = await getToken();
 
-                    await axios.post('/api/cart/update', {cartData},{headers : {Authorization:`Bearer ${token}` }})
+                    await axios.post('/api/cart/update', {cartData: updatedCart}, {headers : {Authorization:`Bearer ${token}` }});
                     toast.success('Item added to cart!');
 
                 } catch (error) {
-                    toast.error (error.message)
+                    toast.error(error.message);
                 }
                 
              }
         },
-        [cartItems, updateCartOnServer, user]
+        [cartItems, updateCartOnServer, user, getToken]
     );
 
     const updateCartQuantity = useCallback(
@@ -155,16 +160,13 @@ export const AppContextProvider = (props) => {
             updateCartOnServer(updatedCart); // Update immediately
             toast.success('Cart updated!');
             try {
-                    const token = await getToken
-
-                    await axios.post('/api/cart/update', {cartData},{headers : {Authorization:`Bearer ${token}` }})
-                    toast.success('Item added to cart!');
-
-                } catch (error) {
-                    toast.error (error.message)
-                }
+                const token = await getToken();
+                await axios.post('/api/cart/update', {cartData: updatedCart}, {headers: {Authorization: `Bearer ${token}`}});
+            } catch (error) {
+                toast.error(error.message);
+            }
         },
-        [cartItems, updateCartOnServer, user]
+        [cartItems, updateCartOnServer, user, getToken]
     );
 
     const getCartCount = useCallback(() => {
@@ -177,6 +179,38 @@ export const AppContextProvider = (props) => {
             return itemInfo ? total + itemInfo.offerPrice * quantity : total;
         }, 0);
     }, [cartItems, products]);
+
+    // Add fetchUserAddresses function
+    const fetchUserAddresses = useCallback(async () => {
+        if (!user) {
+            return;
+        }
+        
+        setAddressesLoading(true);
+        try {
+            const token = await getToken();
+            const { data } = await axios.get('/api/user/address', {
+                headers: { Authorization: `Bearer ${token}` }
+            });
+            
+            if (data.success) {
+                setUserAddresses(data.addresses);
+                if (data.addresses.length > 0 && !selectedAddress) {
+                    setSelectedAddress(data.addresses[0]);
+                }
+            } else {
+                console.error("Error response:", data);
+                toast.error(data.message || "Failed to fetch addresses");
+            }
+        } catch (error) {
+            console.error("Error fetching addresses:", error.response?.data || error.message);
+            if (error.response?.status !== 401) {
+                toast.error(error.response?.data?.message || "Failed to fetch addresses");
+            }
+        } finally {
+            setAddressesLoading(false);
+        }
+    }, [user, getToken]);
 
     useEffect(() => {
         fetchProductData();
@@ -210,7 +244,13 @@ export const AppContextProvider = (props) => {
         updateCartQuantity,
         getCartCount,
         getCartAmount,
-        loadingUser, // Expose loading state
+        loadingUser,
+        // Add these new values
+        userAddresses,
+        selectedAddress,
+        setSelectedAddress,
+        addressesLoading,
+        fetchUserAddresses,
     };
 
     return (

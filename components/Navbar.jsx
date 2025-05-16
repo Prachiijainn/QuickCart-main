@@ -1,8 +1,8 @@
 "use client"
 import React from "react";
-import { assets, BagIcon, BoxIcon, CartIcon, HomeIcon } from "@/assets/assets";
+import { assets, BagIcon, BoxIcon, CartIcon, HomeIcon } from "../assets/assets";
 import Link from "next/link"
-import { useAppContext } from "@/context/AppContext";
+import { useAppContext } from "../context/AppContext";
 import Image from "next/image";
 import { useClerk } from "@clerk/nextjs";
 import { UserButton } from "@clerk/nextjs";
@@ -27,6 +27,11 @@ const Navbar = () => {
         <Link href="/all-products" className="hover:text-gray-900 transition">
           Shop
         </Link>
+        {user && (
+          <Link href="/my-orders" className="hover:text-gray-900 transition">
+            My Orders
+          </Link>
+        )}
         <Link href="/" className="hover:text-gray-900 transition">
           About Us
         </Link>

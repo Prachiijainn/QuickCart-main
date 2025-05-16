@@ -14,6 +14,9 @@ const nextConfig = {
             },
         ],
     },
+    experimental: {
+        // appDir is now default in Next.js 13+
+    },
 };
 
 export default nextConfig;

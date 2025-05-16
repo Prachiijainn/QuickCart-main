@@ -1,11 +1,15 @@
 'use client'
-import { assets } from "@/assets/assets";
-import Navbar from "@/components/Navbar";
-import Footer from "@/components/Footer";
+import { assets } from "../../assets/assets";
+import Navbar from "../../components/Navbar";
+import Footer from "../../components/Footer";
 import Image from "next/image";
 import { useState } from "react";
+import { useAppContext } from "@/context/AppContext";
+import { headers } from "next/headers";
 
 const AddAddress = () => {
+
+    const {getToken,router} = useAppContext
 
     const [address, setAddress] = useState({
         fullName: '',
@@ -18,6 +22,22 @@ const AddAddress = () => {
 
     const onSubmitHandler = async (e) => {
         e.preventDefault();
+        try {
+            const token=await getToken()
+            const{data}= await axios.post('/api/user/get-address',{address},{headers: {Authorization : `Bearer ${token}`}})
+
+
+            if (data.success) {
+                toast.success(data.message)
+                router.push('/cart')
+                
+            }
+            else{
+                toast.error(data.message)
+            }
+        } catch (error) {
+            toast.error(error.message)
+        }
 
     }
 

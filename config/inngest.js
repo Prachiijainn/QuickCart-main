@@ -1,6 +1,7 @@
 import { Inngest } from "inngest";
 import connectDB from "./db";
-import User from "@/models/user";
+import User from "../models/user";
+import Order from "../models/order";
 
 // Create a client to send and receive events
 export const inngest = new Inngest({ id: "stella" });
@@ -84,6 +85,62 @@ export const syncUserDeletion = inngest.createFunction(
     } catch (error) {
       console.error("Error deleting user:", error);
       throw error; // Optionally rethrow if needed
+    }
+  }
+);
+
+// inngest function for order creation in database
+export const createUserOrder = inngest.createFunction(
+  { 
+    id: "create-user-order",
+    batchEvents: {
+      maxSize: 5,
+      timeout: '5s'
+    }
+  },
+  { event: "order/created" },
+  async ({ events }) => {
+    try {
+      console.log(`Processing ${events.length} order events`);
+      
+      // Check if we have events to process
+      if (!events || events.length === 0) {
+        console.log("No events to process");
+        return { success: true, processed: 0 };
+      }
+      
+      const orders = events.map((event) => {
+        if (!event.data) {
+          console.warn("Event missing data:", event);
+          return null;
+        }
+        
+        return {
+          userId: event.data.userId,
+          items: event.data.items || [],
+          amount: event.data.amount || 0,
+          address: event.data.address || {},
+          date: Date.now()
+        };
+      }).filter(Boolean); // Remove any null entries
+      
+      if (orders.length === 0) {
+        console.log("No valid orders to create");
+        return { success: true, processed: 0 };
+      }
+      
+      await connectDB();
+      const result = await Order.create(orders);
+      console.log(`Successfully created ${orders.length} orders`);
+      
+      return { 
+        success: true, 
+        processed: orders.length,
+        orderIds: Array.isArray(result) ? result.map(order => order._id) : [result._id]
+      };
+    } catch (error) {
+      console.error("Error creating orders:", error);
+      return { success: false, error: error.message };
     }
   }
 );

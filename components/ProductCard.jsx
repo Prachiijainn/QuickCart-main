@@ -1,62 +1,55 @@
-import React from 'react'
-import { assets } from '@/assets/assets'
+'use client';
+import React from 'react';
+import { useAppContext } from '../context/AppContext';
 import Image from 'next/image';
-import { useAppContext } from '@/context/AppContext';
+import { useClerk } from "@clerk/nextjs";
 
 const ProductCard = ({ product }) => {
-
-    const { currency, router } = useAppContext()
-
+    const { addToCart, router, user } = useAppContext();
+    const { openSignIn } = useClerk();
+    
+    const handleProductClick = () => {
+        router.push(`/product/${product._id}`);
+    };
+    
+    const handleAddToCart = (e) => {
+        e.stopPropagation();
+        if (!user) {
+            // Redirect to sign in if user is not authenticated
+            openSignIn();
+        } else {
+            addToCart(product._id);
+        }
+    };
+    
     return (
-        <div
-            onClick={() => { router.push('/product/' + product._id); scrollTo(0, 0) }}
-            className="flex flex-col items-start gap-0.5 max-w-[200px] w-full cursor-pointer"
-        >
-            <div className="cursor-pointer group relative bg-gray-500/10 rounded-lg w-full h-52 flex items-center justify-center">
-                <Image
-                    src={product.image[0]}
-                    alt={product.name}
-                    className="group-hover:scale-105 transition object-cover w-4/5 h-4/5 md:w-full md:h-full"
-                    width={800}
-                    height={800}
+        <div className="group cursor-pointer transition-all duration-300 hover:shadow-md rounded-lg p-3">
+            <div className="relative h-48 mb-4 bg-gray-100 rounded-lg overflow-hidden" onClick={handleProductClick}>
+                <Image 
+                    src={Array.isArray(product.image) ? product.image[0] : product.image} 
+                    alt={product.name} 
+                    layout="fill" 
+                    objectFit="contain"
+                    className="transition-transform duration-300 group-hover:scale-105" 
                 />
-                <button className="absolute top-2 right-2 bg-white p-2 rounded-full shadow-md">
-                    <Image
-                        className="h-3 w-3"
-                        src={assets.heart_icon}
-                        alt="heart_icon"
-                    />
-                </button>
             </div>
-
-            <p className="md:text-base font-medium pt-2 w-full truncate">{product.name}</p>
-            <p className="w-full text-xs text-gray-500/70 max-sm:hidden truncate">{product.description}</p>
-            <div className="flex items-center gap-2">
-                <p className="text-xs">{4.5}</p>
-                <div className="flex items-center gap-0.5">
-                    {Array.from({ length: 5 }).map((_, index) => (
-                        <Image
-                            key={index}
-                            className="h-3 w-3"
-                            src={
-                                index < Math.floor(4)
-                                    ? assets.star_icon
-                                    : assets.star_dull_icon
-                            }
-                            alt="star_icon"
-                        />
-                    ))}
+            <h3 className="font-medium text-gray-800 line-clamp-1" onClick={handleProductClick}>{product.name}</h3>
+            <div className="mt-2 flex justify-between items-center">
+                <div>
+                    <p className="text-sm text-gray-400 line-through">${product.originalPrice}</p>
+                    <p className="font-medium">${product.offerPrice}</p>
                 </div>
-            </div>
-
-            <div className="flex items-end justify-between w-full mt-1">
-                <p className="text-base font-medium">{currency}{product.offerPrice}</p>
-                <button className=" max-sm:hidden px-4 py-1.5 text-gray-500 border border-gray-500/20 rounded-full text-xs hover:bg-slate-50 transition">
-                    Buy now
+                <button 
+                    onClick={handleAddToCart}
+                    className="p-2 rounded-full bg-blue-600 text-white hover:bg-blue-700 transition-colors"
+                >
+                    <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 6v6m0 0v6m0-6h6m-6 0H6" />
+                    </svg>
                 </button>
             </div>
         </div>
-    )
-}
+    );
+};
 
-export default ProductCard
+export default ProductCard;

@@ -11,34 +11,37 @@ export async function GET(request) {
     const { userId } = getAuth(request);
     console.log("userId from Clerk auth:", userId);
 
-    if (!userId) {
-        console.log("User not authenticated");
-        return NextResponse.json({ success: false, message: "Unauthorized" }, { status: 401 });
-    }
-
     try {
-        console.log("Fetching Clerk user...");
-        const client = await clerkClient();
-        const user =await client.users.getUser(userId)
-        console.log(user)
-        console.log("Fetched user:", {
-            id: user.id,
-            email: user.emailAddresses?.[0]?.emailAddress,
-            role: user?.publicMetadata?.role || user?.privateMetadata?.role
-        });
-
-        const isSeller = user?.publicMetadata?.role === "seller" || user?.privateMetadata?.role === "seller";
-        if (!isSeller) {
-            console.log("User is not a seller");
-            return NextResponse.json({ success: false, message: "Not a seller" }, { status: 403 });
-        }
-
         console.log("Connecting to DB...");
         await connectDB();
         console.log("Connected!");
 
-        console.log("Fetching products for userId:", userId);
-        const products = await Product.find({ userId });
+        let products;
+
+        if (userId) {
+            console.log("Fetching Clerk user...");
+            const client = await clerkClient();
+        const user =await client.users.getUser(userId)
+            console.log("Fetched user:", {
+                id: user.id,
+                email: user.emailAddresses?.[0]?.emailAddress,
+                role: user?.publicMetadata?.role || user?.privateMetadata?.role,
+            });
+
+            const isSeller = user?.publicMetadata?.role === "seller" || user?.privateMetadata?.role === "seller";
+
+            if (isSeller) {
+                console.log("User is a seller. Fetching their products...");
+                products = await Product.find({ userId });
+            } else {
+                console.log("User is not a seller. Fetching all products...");
+                products = await Product.find({});
+            }
+        } else {
+            console.log("No userId found. Fetching all products for guest user...");
+            products = await Product.find({});
+        }
+
         console.log("Fetched products:", products.length);
 
         return NextResponse.json({

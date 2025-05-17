@@ -56,29 +56,24 @@ export async function POST(request) {
         
         console.log("Order created successfully:", newOrder._id);
         
-        // Enhanced Inngest event sending for automatic processing
+        // Also send event to Inngest for any background processing or analytics
         try {
-            const eventData = {
-                orderId: newOrder._id.toString(),
-                userId,
-                itemCount: items.length,
-                orderTotal: totalAmount,
-                orderDate: newOrder.date,
-                status: "new"
-            };
-            
-            console.log("Sending order event to Inngest:", eventData);
-            
-            // Send the event directly to trigger automatic processing
-            const inngestResult = await inngest.send({
+            console.log("Sending order event to Inngest");
+            await inngest.send({
                 name: "order/created",
-                data: eventData
+                data: {
+                    orderId: newOrder._id.toString(),
+                    userId,
+                    items,
+                    amount: totalAmount,
+                    address,
+                    date: newOrder.date
+                }
             });
-            
-            console.log("Inngest event sent successfully, ID:", inngestResult?.id || "unknown");
+            console.log("Inngest event sent successfully");
         } catch (inngestError) {
-            console.error("Failed to send Inngest event - but continuing with order processing");
-            console.error("Error message:", inngestError.message);
+            // Log but don't fail the request if Inngest event fails
+            console.error("Failed to send Inngest event:", inngestError);
         }
         
         // Clear user cart

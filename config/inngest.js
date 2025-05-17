@@ -3,28 +3,12 @@ import connectDB from "./db";
 import User from "../models/user";
 import Order from "../models/order";
 
-// Create a client to send and receive events - customized for better auto-connection
+// Create a client to send and receive events
 export const inngest = new Inngest({ 
   id: "quickcart",
   eventKey: process.env.INNGEST_EVENT_KEY,
   // Use a consistent endpoint
-  endpoint: process.env.INNGEST_ENDPOINT || 'https://api.inngest.com',
-  // Improve connection reliability
-  middleware: [
-    // Add custom middleware to log events being sent
-    (next) => async (ctx) => {
-      console.log(`[INNGEST] Sending event: ${ctx.event?.name}`);
-      const result = await next(ctx);
-      console.log(`[INNGEST] Event sent: ${ctx.event?.name}, success: ${!!result}`);
-      return result;
-    },
-  ],
-  // Enable better error handling
-  logger: {
-    debug: msg => console.debug(`[INNGEST-DEBUG] ${msg}`),
-    info: msg => console.info(`[INNGEST-INFO] ${msg}`),
-    error: (msg, err) => console.error(`[INNGEST-ERROR] ${msg}`, err),
-  }
+  endpoint: process.env.INNGEST_ENDPOINT || 'https://api.inngest.com'
 });
 
 // User Created Function
@@ -114,65 +98,79 @@ export const syncUserDeletion = inngest.createFunction(
 export const processOrderEvents = inngest.createFunction(
   { 
     id: "process-order-events",
-    concurrency: 10
+    batchEvents: {
+      maxSize: 5,
+      timeout: '5s'
+    }
   },
   { event: "order/created" },
-  async ({ event, step }) => {
+  async ({ events }) => {
     try {
-      console.log("Processing order event:", event);
+      console.log(`Processing ${events.length} order events`);
       
-      // Validate required fields are present
-      if (!event.data || !event.data.orderId) {
-        console.error("Missing orderId in event data");
-        return { success: false, error: "Missing orderId in event data" };
+      // Check if we have events to process
+      if (!events || events.length === 0) {
+        console.log("No events to process");
+        return { success: true, processed: 0 };
       }
-
+      
       // Connect to database
-      await step.run("Connect to database", async () => {
-        await connectDB();
-        return { success: true };
-      });
+      await connectDB();
       
-      // Find and update the order
-      const { orderId, userId, status = "new" } = event.data;
+      // Process each order event (e.g., send confirmation emails, update inventory, etc.)
+      const processedEvents = [];
       
-      const order = await step.run("Find order", async () => {
-        const order = await Order.findById(orderId);
-        if (!order) {
-          throw new Error(`Order not found: ${orderId}`);
+      for (const event of events) {
+        if (!event.data || !event.data.orderId) {
+          console.warn("Event missing data or orderId:", event);
+          continue;
         }
-        return order;
-      });
-      
-      // Update the order status to "processing"
-      const updatedOrder = await step.run("Update order status", async () => {
-        const previousStatus = order.status;
-        order.status = "processing";
-        await order.save();
         
-        console.log(`Updated order ${orderId} status from "${previousStatus}" to "processing"`);
-        
-        return order;
-      });
+        try {
+          const { orderId, userId } = event.data;
+          
+          // Find the order in the database
+          const order = await Order.findById(orderId);
+          
+          if (!order) {
+            console.warn(`Order not found: ${orderId}`);
+            continue;
+          }
+          
+          // Example: Update order status to "processing"
+          order.status = "processing";
+          await order.save();
+          
+          console.log(`Updated order ${orderId} status to processing`);
+          
+          // Here you could add more processing logic:
+          // - Send confirmation email
+          // - Update inventory
+          // - Create shipping label
+          // - etc.
+          
+          processedEvents.push({
+            orderId,
+            userId,
+            status: "processing"
+          });
+          
+        } catch (error) {
+          console.error(`Error processing order event:`, error);
+        }
+      }
       
-      // This could be a place to send confirmation emails, update inventory, etc.
-      await step.sleep("Wait for message queue", "5s");
-      
-      console.log(`Successfully processed order: ${orderId}`);
+      console.log(`Successfully processed ${processedEvents.length} order events`);
       
       return { 
         success: true, 
-        orderId,
-        status: updatedOrder.status,
-        message: "Order processed successfully and status updated to processing"
+        processed: processedEvents.length,
+        events: processedEvents
       };
       
     } catch (error) {
-      console.error("Error processing order:", error);
-      return { 
-        success: false, 
-        error: error.message || "Unknown error processing order"
-      };
+      console.error("Error in batch order processing:", error);
+      return { success: false, error: error.message };
     }
   }
 );

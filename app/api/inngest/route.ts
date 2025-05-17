@@ -11,15 +11,13 @@ import {
   testConnectionFunction
 } from "@/config/inngest";
 
-// Add serving options for improved reliability
+// Add serving options for better connection reliability
 const serverConfig = {
   signingKey: process.env.INNGEST_SIGNING_KEY,
-  serveOrigin: true,
-  // Log requests to help with debugging
-  logLevel: 'info' as const
+  serveOrigin: true
 };
 
-// Create a handler with all functions for automatic processing
+// Create a single API handler with all your functions
 export const { GET, POST, PUT } = serve({
   client: inngest,
   functions: [

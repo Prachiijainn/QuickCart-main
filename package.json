@@ -8,9 +8,7 @@
     "start": "next start",
     "lint": "next lint",
     "inngest:dev": "npx inngest-cli@latest serve --no-discovery",
-    "test:inngest": "node scripts/test-inngest.js",
-    "test:order-event": "node scripts/test-order-event.js",
-    "send:test-order": "node scripts/send-test-order.js"
+    "test:inngest": "node scripts/test-inngest.js"
   },
   "dependencies": {
     "@clerk/nextjs": "^6.19.4",
